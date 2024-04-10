@@ -40,12 +40,16 @@
             Lb_OPTIONS = new Label();
             Cb_ImageType = new ComboBox();
             LCb_NbImages = new CheckedListBox();
+            TB_Interval = new TrackBar();
+            L_TextScore = new Label();
+            L_Score = new Label();
             ((System.ComponentModel.ISupportInitialize)PB_InitialImage).BeginInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage).BeginInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)PB_GroundTruth).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)TB_Interval).BeginInit();
             SuspendLayout();
             // 
             // PB_InitialImage
@@ -129,7 +133,7 @@
             // Lb_OPTIONS
             // 
             Lb_OPTIONS.AutoSize = true;
-            Lb_OPTIONS.Location = new Point(224, 507);
+            Lb_OPTIONS.Location = new Point(65, 493);
             Lb_OPTIONS.Name = "Lb_OPTIONS";
             Lb_OPTIONS.Size = new Size(87, 25);
             Lb_OPTIONS.TabIndex = 9;
@@ -138,7 +142,7 @@
             // Cb_ImageType
             // 
             Cb_ImageType.FormattingEnabled = true;
-            Cb_ImageType.Location = new Point(174, 535);
+            Cb_ImageType.Location = new Point(15, 521);
             Cb_ImageType.Name = "Cb_ImageType";
             Cb_ImageType.Size = new Size(194, 33);
             Cb_ImageType.TabIndex = 10;
@@ -147,16 +151,47 @@
             // 
             LCb_NbImages.FormattingEnabled = true;
             LCb_NbImages.Items.AddRange(new object[] { "Image Seule", "Totalité des images", "Intervalle" });
-            LCb_NbImages.Location = new Point(174, 575);
+            LCb_NbImages.Location = new Point(15, 561);
             LCb_NbImages.Name = "LCb_NbImages";
             LCb_NbImages.Size = new Size(194, 88);
             LCb_NbImages.TabIndex = 11;
+            // 
+            // TB_Interval
+            // 
+            TB_Interval.Location = new Point(15, 655);
+            TB_Interval.Maximum = 300;
+            TB_Interval.Name = "TB_Interval";
+            TB_Interval.RightToLeft = RightToLeft.No;
+            TB_Interval.Size = new Size(194, 69);
+            TB_Interval.TabIndex = 12;
+            TB_Interval.TickFrequency = 10;
+            TB_Interval.TickStyle = TickStyle.TopLeft;
+            // 
+            // L_TextScore
+            // 
+            L_TextScore.AutoSize = true;
+            L_TextScore.Location = new Point(439, 561);
+            L_TextScore.Name = "L_TextScore";
+            L_TextScore.Size = new Size(70, 25);
+            L_TextScore.TabIndex = 13;
+            L_TextScore.Text = "Score : ";
+            // 
+            // L_Score
+            // 
+            L_Score.AutoSize = true;
+            L_Score.Location = new Point(505, 561);
+            L_Score.Name = "L_Score";
+            L_Score.Size = new Size(0, 25);
+            L_Score.TabIndex = 14;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1751, 731);
+            Controls.Add(L_Score);
+            Controls.Add(L_TextScore);
+            Controls.Add(TB_Interval);
             Controls.Add(LCb_NbImages);
             Controls.Add(Cb_ImageType);
             Controls.Add(Lb_OPTIONS);
@@ -172,13 +207,13 @@
             Margin = new Padding(4);
             Name = "Form1";
             Text = "Form1";
-            Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)PB_InitialImage).EndInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage).EndInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage1).EndInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage2).EndInit();
             ((System.ComponentModel.ISupportInitialize)PB_TreatedImage3).EndInit();
             ((System.ComponentModel.ISupportInitialize)PB_GroundTruth).EndInit();
+            ((System.ComponentModel.ISupportInitialize)TB_Interval).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -197,5 +232,8 @@
         private Label Lb_OPTIONS;
         private ComboBox Cb_ImageType;
         private CheckedListBox LCb_NbImages;
+        private TrackBar TB_Interval;
+        private Label L_TextScore;
+        private Label L_Score;
     }
 }

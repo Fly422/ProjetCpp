@@ -1,17 +1,17 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <windows.h>
 #include <cmath>
 #include <vector>
 #include <limits>
 #include <stack>
-#include <algorithm>
 
 #include "ImageDouble.h"
 
-#define PI 3.14159265358979323846
+#define PI 3.14159265
 
-#pragma region Constructeurs & Destructeurs
+// constructeurs et destructeur
 CImageDouble::CImageDouble() {
 
 	this->m_iHauteur  = 0;
@@ -47,6 +47,14 @@ CImageDouble::CImageDouble(const CImageDouble& im) {
 	if (im.m_pucPixel != NULL) {
 		this->m_pucPixel = new double[im.lireNbPixels()];
 		memcpy(this->m_pucPixel, im.m_pucPixel, im.lireNbPixels()*sizeof(double));
+	}
+}
+
+CImageDouble::~CImageDouble() {
+
+	if (this->m_pucPixel) {
+		delete[] this->m_pucPixel;
+		this->m_pucPixel = NULL;
 	}
 }
 
@@ -133,16 +141,6 @@ CImageDouble::CImageDouble(const CImageNdg& im, const std::string& methode) {
 			}
 }
 
-CImageDouble::~CImageDouble() {
-
-	if (this->m_pucPixel) {
-		delete[] this->m_pucPixel;
-		this->m_pucPixel = NULL;
-	}
-}
-#pragma endregion
-
-#pragma region Surchage opérateur
 CImageDouble& CImageDouble::operator=(const CImageDouble& im) {
 
 	if (&im == this)
@@ -163,19 +161,32 @@ CImageDouble& CImageDouble::operator=(const CImageDouble& im) {
 
 	return *this;
 }
-#pragma endregion
 
-#pragma region Traitements
+// seuillage
+CImageDouble CImageDouble::seuillage(double seuilBas, double seuilHaut) {
 
-// distance au fond
+	// pas de LUT possible, données flottantes
+	CImageDouble out(this->lireHauteur(), this->lireLargeur());
+	out.m_sNom = this->lireNom() + "S";
+	out.m_vMin = 0;
+	out.m_vMax = 1;
+
+	for (int i = 0; i < out.lireNbPixels(); i++)
+		if ((this->operator()(i) >= seuilBas) && (this->operator()(i) <= seuilHaut))
+			out(i) = 1;
+
+	return out;
+}
+
+
 CImageDouble CImageDouble::distance(std::string eltStructurant, double valBord) {
 	// distance au fond
 	// gestion du bord : 0 ou autre valeur valant max des float
 
 	CImageDouble out(this->lireHauteur(), this->lireLargeur());
 	out.ecrireNom(this->lireNom() + "DF");
-	out.ecrireMax(DBL_MIN);
-	out.ecrireMin(DBL_MAX);
+	out.ecrireMax(FLT_MIN);
+	out.ecrireMin(FLT_MAX);
 
 	CImageDouble agrandie(this->lireHauteur() + 2, this->lireLargeur() + 2);
 	// gestion des bords ajoutés
@@ -201,15 +212,15 @@ CImageDouble CImageDouble::distance(std::string eltStructurant, double valBord) 
 		for (int i = 1; i<agrandie.lireHauteur() - 1; i++)
 			for (int j = 1; j<agrandie.lireLargeur() - 1; j++) {
 				double pixel = agrandie(i, j);
-				pixel = std::min(pixel, agrandie(i - 1, j) + 1);
-				pixel = std::min(pixel, agrandie(i, j - 1) + 1);
+				pixel = min(pixel, agrandie(i - 1, j) + 1);
+				pixel = min(pixel, agrandie(i, j - 1) + 1);
 				agrandie(i, j) = pixel;
 			}
 		for (int i = agrandie.lireHauteur() - 2; i >= 1; i--)
 			for (int j = agrandie.lireLargeur() - 2; j >= 1; j--) {
 				double pixel = agrandie(i, j);
-				pixel = std::min(pixel, agrandie(i + 1, j) + 1);
-				pixel = std::min(pixel, agrandie(i, j + 1) + 1);
+				pixel = min(pixel, agrandie(i + 1, j) + 1);
+				pixel = min(pixel, agrandie(i, j + 1) + 1);
 				agrandie(i, j) = pixel;
 			}
 		// conservation du centre
@@ -223,19 +234,19 @@ CImageDouble CImageDouble::distance(std::string eltStructurant, double valBord) 
 		for (int i = 1; i<agrandie.lireHauteur() - 1; i++)
 			for (int j = 1; j<agrandie.lireLargeur() - 1; j++) {
 				double pixel = agrandie(i, j);
-				pixel = std::min(pixel, agrandie(i - 1, j) + 1);
-				pixel = std::min(pixel, agrandie(i, j - 1) + 1);
-				pixel = std::min(pixel, agrandie(i - 1, j - 1) + 1);
-				pixel = std::min(pixel, agrandie(i - 1, j + 1) + 1);
+				pixel = min(pixel, agrandie(i - 1, j) + 1);
+				pixel = min(pixel, agrandie(i, j - 1) + 1);
+				pixel = min(pixel, agrandie(i - 1, j - 1) + 1);
+				pixel = min(pixel, agrandie(i - 1, j + 1) + 1);
 				agrandie(i, j) = pixel;
 			}
 		for (int i = agrandie.lireHauteur() - 2; i >= 1; i--)
 			for (int j = agrandie.lireLargeur() - 2; j >= 1; j--) {
 				double pixel = agrandie(i, j);
-				pixel = std::min(pixel, agrandie(i + 1, j) + 1);
-				pixel = std::min(pixel, agrandie(i, j + 1) + 1);
-				pixel = std::min(pixel, agrandie(i + 1, j + 1) + 1);
-				pixel = std::min(pixel, agrandie(i + 1, j - 1) + 1);
+				pixel = min(pixel, agrandie(i + 1, j) + 1);
+				pixel = min(pixel, agrandie(i, j + 1) + 1);
+				pixel = min(pixel, agrandie(i + 1, j + 1) + 1);
+				pixel = min(pixel, agrandie(i + 1, j - 1) + 1);
 				agrandie(i, j) = pixel;
 			}
 		// conservation du centre
@@ -252,7 +263,6 @@ CImageDouble CImageDouble::distance(std::string eltStructurant, double valBord) 
 	return out;
 }
 
-// conversion entre types
 CImageNdg CImageDouble::toNdg(const std::string& methode) {
 
 	CImageNdg out(this->lireHauteur(), this->lireLargeur());
@@ -282,7 +292,150 @@ CImageNdg CImageDouble::toNdg(const std::string& methode) {
 	return(out);
 }
 
-// vecteur gradient
+CImageDouble CImageDouble::maxiLocaux(int N, int M) const {
+
+	CImageDouble out(this->lireHauteur(), this->lireLargeur());
+
+	int ns2 = N / 2;
+	int ms2 = M / 2;
+
+	out.ecrireNom(this->lireNom() + "ML");
+	for (int i = 0; i<this->lireHauteur(); i++)
+		for (int j = 0; j<this->lireLargeur(); j++)
+			if (this->operator()(i, j) > 0) {	// test si le pixel existe i-taille/2
+				int dk = max(0, i - ns2);
+				int fk = min(i + ns2, this->lireHauteur() - 1);
+				int dl = max(0, j - ms2);
+				int fl = min(j + ms2, this->lireLargeur() - 1);
+
+				double maxVal = this->operator()(i, j);
+				bool flag = true;
+				int k = dk;
+				while ((k <= fk) && (flag == true)) {
+					int l = dl;
+					while ((l <= fl) && (flag == true)) {
+						if (this->operator()(k, l) > maxVal)
+							flag = false;
+						l++;
+					}
+					k++;
+				}
+				if (flag == true)
+					out(i, j) = 1;
+			}
+	out.m_vMax = 1;
+
+	return out;
+}
+
+
+CImageDouble CImageDouble::planHough() {
+
+	double hough_h = max(this->lireHauteur() / 2, this->lireLargeur() / 2)*sqrt(2.0);
+
+	CImageDouble H((int)(hough_h * 2), 180);
+	H.ecrireMin(0);
+	H.ecrireMax(0);
+
+	double cx = this->lireLargeur() / 2;
+	double cy = this->lireHauteur() / 2;
+
+	//HOUGH transformation  
+
+	for (int y = 0; y < this->lireHauteur(); y++)
+	{
+		for (int x = 0; x < this->lireLargeur(); x++)
+		{
+			if (this->operator()(y, x) > 0)
+				for (int t = 0; t < 180; t++)
+				{
+					double r = (((double)x - cx) * cos((double)t * (PI / 180)) + (((double)y - cy) * sin((double)t * (PI / 180))));
+					H(int(hough_h + r), t) += 1;
+				}
+		}
+	}
+
+	for (int p = 0; p < H.lireNbPixels(); p++)
+		if (H(p) > H.lireMax())
+			H.ecrireMax(H(p));
+			
+	return H;
+}
+
+CImageDouble CImageDouble::extractionLignes(int N, int M, double dimLigne, bool affichage) {
+	
+	// extraction des maxi locaux sur voisinage NxM
+	CImageDouble mL = this->maxiLocaux(N,M);
+	double hough_h = this->lireHauteur() / 2;
+
+	// extraction des lignes avec maxi local + seuil 
+
+	CImageDouble lignes(this->lireHauteur(), this->lireLargeur());
+	lignes.ecrireNom("lignes");
+
+	int nbLignes = 1;
+	std::stack<int> angles;
+	std::stack<double> rho;
+
+	for (int r = 0; r < this->lireHauteur(); r++)
+		for (int a = 0; a < this->lireLargeur(); a++)
+			if ((mL(r, a) >0) && (this->operator()(r, a) >= dimLigne))
+			{
+				lignes(r, a) = nbLignes++;
+				angles.push(a);
+				rho.push(r - hough_h);
+			}
+	if (affichage)
+	{
+		std::cout << nbLignes-1 << " lignes avec les infos suivants :" << std::endl;
+		while (!angles.empty())
+		{
+			std::cout << "(" << angles.top() << "," << rho.top() << ")";
+			angles.pop();
+			rho.pop();
+
+			if (!angles.empty())
+				std::cout << " ; ";
+		}
+		std::cout << std::endl;
+	}
+
+	lignes.m_vMin = 0;
+	lignes.m_vMax = nbLignes - 1;
+
+	return lignes;
+}
+
+CImageNdg CImageDouble::houghInverse(const CImageNdg& img) {
+
+	CImageNdg HI(img.lireHauteur(),img.lireLargeur(),0);
+	HI.ecrireNom(img.lireNom()+"HI");
+	HI.choixPalette(img.lirePalette());
+
+	double hough_h = max(img.lireHauteur() / 2, img.lireLargeur() / 2)*sqrt(2.0);
+
+	double cx = img.lireLargeur() / 2;
+	double cy = img.lireHauteur() / 2;
+
+	for (int y = 0; y < img.lireHauteur(); y++)
+	{
+		for (int x = 0; x < img.lireLargeur(); x++)
+		{
+			if (img(y, x) > 0)
+			{
+				for (int t = 0; t < 180; t++)
+				{
+					double r = (((double)x - cx) * cos((double)t * (PI / 180)) + (((double)y - cy) * sin((double)t * (PI / 180))));
+					if (this->operator()(int(hough_h + r), t) > 0)
+						HI(y, x) = (int)(this->operator()(int(hough_h + r), t)) % 255; 
+				}
+			}
+		}
+	}
+
+	return(HI);
+}
+
 CImageDouble CImageDouble::vecteurGradient(const std::string& axe) {
 	CImageDouble out(this->lireHauteur(), this->lireLargeur());
 
@@ -378,419 +531,3 @@ CImageDouble CImageDouble::vecteurGradient(const std::string& axe) {
 
 	return out;
 }
-
-// filtrage : moyen ou gaussien (approches par vecteur et transposée plus rapide), ecart type
-CImageDouble CImageDouble::filtrage(const std::string& methode, int N, double sigma) {
-
-	CImageDouble out(this->lireHauteur(), this->lireLargeur());
-	out.m_vMax = DBL_MIN;
-	out.m_vMin = DBL_MAX;
-
-	if (methode.compare("moyen") == 0) {
-		out.m_sNom = this->lireNom() + "FMo";
-		int nbBords = N / 2;
-
-		CImageDouble agrandie(this->lireHauteur() + nbBords * 2, this->lireLargeur() + nbBords * 2);
-
-		// gestion du coeur
-		for (int i = 0; i < this->lireHauteur(); i++)
-			for (int j = 0; j < this->lireLargeur(); j++) {
-				agrandie(i + nbBords, j + nbBords) = this->operator()(i, j);
-			}
-
-		// gestion des bords
-		for (int pix = 0; pix < agrandie.lireLargeur(); pix++) {
-			for (int t = nbBords - 1; t >= 0; t--)
-				agrandie(t, pix) = agrandie(nbBords, pix);
-			for (int t = agrandie.lireHauteur() - 1; t >= agrandie.lireHauteur() - 1 - nbBords; t--)
-				agrandie(t, pix) = agrandie(agrandie.lireHauteur() - 1 - nbBords, pix);
-		}
-		for (int pix = 0; pix < agrandie.lireHauteur(); pix++) {
-			for (int t = nbBords - 1; t >= 0; t--)
-				agrandie(pix, t) = agrandie(pix, nbBords);
-			for (int t = agrandie.lireLargeur() - 1; t >= agrandie.lireLargeur() - 1 - nbBords; t--)
-				agrandie(pix, t) = agrandie(pix, agrandie.lireLargeur() - 1 - nbBords);
-		}
-
-		CImageDouble agrandie2 = agrandie;
-
-		// colonnes
-		for (int i = nbBords; i < agrandie.lireHauteur() - nbBords; i++)
-			for (int j = nbBords; j < agrandie.lireLargeur() - nbBords; j++) {
-				double somme = 0;
-				double moy = 0;
-
-				for (int k = -nbBords; k <= nbBords; k++) {
-					moy += (double)agrandie(i - k, j);
-					somme += (double)1;
-				}
-				agrandie2(i, j) = moy / somme;
-			}
-		// lignes
-		for (int i = nbBords; i < agrandie.lireHauteur() - nbBords; i++)
-			for (int j = nbBords; j < agrandie.lireLargeur() - nbBords; j++) {
-				double somme = 0;
-				double moy = 0;
-
-				for (int l = -nbBords; l <= nbBords; l++) {
-					moy += (double)agrandie2(i, j - l);
-					somme += (double)1;
-				}
-				agrandie(i, j) = (moy / somme);
-			}
-		// image out
-		for (int i = nbBords; i < agrandie.lireHauteur() - nbBords; i++)
-			for (int j = nbBords; j < agrandie.lireLargeur() - nbBords; j++)
-			{
-				out(i - nbBords, j - nbBords) = agrandie(i, j);
-				if (out(i - nbBords, j - nbBords) < out.lireMin())
-					out.ecrireMin(out(i - nbBords, j - nbBords));
-				if (out(i - nbBords, j - nbBords) > out.lireMax())
-					out.ecrireMax(out(i - nbBords, j - nbBords));
-			}
-	}
-	else
-		if (methode.compare("gaussien") == 0)
-		{
-			out.m_sNom = this->lireNom() + "FGa";
-			// définition du noyau
-			double noyau[50]; // taille maxi pour optimisation 
-
-			double somme = 0; // normalisation
-			for (int i = 0; i < N; i++)
-			{
-				noyau[i] = exp(-((i - N / 2)*(i - N / 2)) / (2 * sigma*sigma));
-				somme += noyau[i];
-			}
-
-			// filtrage
-			int nbBords = N / 2;
-
-			CImageDouble agrandie(this->lireHauteur() + nbBords * 2, this->lireLargeur() + nbBords * 2);
-
-			// gestion du coeur
-			for (int i = 0; i < this->lireHauteur(); i++)
-				for (int j = 0; j < this->lireLargeur(); j++) {
-					agrandie(i + nbBords, j + nbBords) = this->operator()(i, j);
-				}
-
-			// gestion des bords
-			for (int pix = 0; pix < agrandie.lireLargeur(); pix++) {
-				for (int t = nbBords - 1; t >= 0; t--)
-					agrandie(t, pix) = agrandie(nbBords, pix);
-				for (int t = agrandie.lireHauteur() - 1; t >= agrandie.lireHauteur() - 1 - nbBords; t--)
-					agrandie(t, pix) = agrandie(agrandie.lireHauteur() - 1 - nbBords, pix);
-			}
-			for (int pix = 0; pix < agrandie.lireHauteur(); pix++) {
-				for (int t = nbBords - 1; t >= 0; t--)
-					agrandie(pix, t) = agrandie(pix, nbBords);
-				for (int t = agrandie.lireLargeur() - 1; t >= agrandie.lireLargeur() - 1 - nbBords; t--)
-					agrandie(pix, t) = agrandie(pix, agrandie.lireLargeur() - 1 - nbBords);
-			}
-
-			CImageDouble agrandie2 = agrandie;
-
-			// colonnes
-			for (int i = nbBords; i < agrandie.lireHauteur() - nbBords; i++)
-				for (int j = nbBords; j < agrandie.lireLargeur() - nbBords; j++) {
-					double somme = 0;
-					double moy = 0;
-
-					for (int k = -nbBords; k <= nbBords; k++) {
-						moy += (double)agrandie(i - k, j)*noyau[k + nbBords];
-						somme += noyau[k + nbBords];
-					}
-					agrandie2(i, j) = moy / somme;
-				}
-			// lignes
-			for (int i = nbBords; i < agrandie.lireHauteur() - nbBords; i++)
-				for (int j = nbBords; j < agrandie.lireLargeur() - nbBords; j++) {
-					double somme = 0;
-					double moy = 0;
-
-					for (int l = -nbBords; l <= nbBords; l++) {
-						moy += (double)agrandie2(i, j - l)*noyau[l + nbBords];
-						somme += noyau[l + nbBords];
-					}
-					agrandie(i, j) = (moy / somme);
-				}
-			// image out
-			for (int i = nbBords; i < agrandie.lireHauteur() - nbBords; i++)
-				for (int j = nbBords; j < agrandie.lireLargeur() - nbBords; j++)
-				{
-					out(i - nbBords, j - nbBords) = agrandie(i, j);
-					if (out(i - nbBords, j - nbBords) < out.lireMin())
-						out.ecrireMin(out(i - nbBords, j - nbBords));
-					if (out(i - nbBords, j - nbBords) > out.lireMax())
-						out.ecrireMax(out(i - nbBords, j - nbBords));
-				}
-		}
-
-	return out;
-}
-
-std::vector<CImageDouble> CImageDouble::pyramide(int hauteur, int tailleFiltre, double sigma)
-{
-	std::vector<CImageDouble> burt;
-
-	// propagation des min,max du niveau initial aux autres niveaux, sinon va modifier la dynamique des niveaux
-	burt.resize(hauteur);
-	burt.at(0) = *this;
-	burt.at(0).ecrireNom(this->lireNom() + std::to_string(0));
-
-	for (int niv = 1; niv < hauteur; niv++)
-	{
-		// filtrage gaussien qui améliore les résultats avant sous-échantillonage
-		CImageDouble niveau = burt.at(niv - 1).filtrage("gaussien", 5, 1);
-		CImageDouble inter(niveau.lireHauteur() / 2, niveau.lireLargeur() / 2);
-
-		inter.ecrireMax(this->lireMax()); // pour ne pas changer la dynamique entre niveaux
-		inter.ecrireMin(this->lireMin());
-		inter.ecrireNom(this->lireNom() + std::to_string(niv));
-
-		for (int i = 0; i < inter.lireHauteur(); i++)
-			for (int j = 0; j < inter.lireLargeur(); j++)
-				inter(i, j) = (niveau(2 * i, 2 * j) + niveau(2 * i + 1, 2 * j) + niveau(2 * i, 2 * j + 1) + niveau(2 * i + 1, 2 * j + 1)) / 4;
-
-		burt.at(niv) = inter;
-	}
-
-	return burt;
-}
-
-CImageNdg CImageDouble::ecartTypeLocal(const CImageNdg& im, int N)
-{
-	double moy = 0;
-	double somme = 0;
-	double ecartType = 0;
-	
-	int nbPixel2 = 0;
-	int A = 0, B = 0, C = 0, D = 0;
-	int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-
-	CImageDouble integrale1(im, "integrale1");
-	CImageDouble integrale2(im, "integrale2");
-	CImageNdg out(im);
-	out.ecrireNom(im.lireNom() + "ETL");
-
-
-	for (int i = 0; i < im.lireHauteur(); i++)
-	{
-		for (int j = 0; j < im.lireLargeur(); j++)
-		{
-			moy = 0;
-			ecartType = 0;
-			somme = 0;
-			nbPixel2 = 0;
-
-			x1 = (i - N / 2) < 0 ? 0 : i - N / 2;
-			y1 = (j - N / 2) < 0 ? 0 : j - N / 2;
-			x2 = (i + N / 2) >= im.lireHauteur() ? im.lireHauteur() - 1 : i + N / 2;
-			y2 = (j + N / 2) >= im.lireLargeur() ? im.lireLargeur() - 1 : j + N / 2;
-
-			A = (x1 == 0 || y1 == 0) ? 0 : integrale1(x1 - 1, y1 - 1);
-			B = (x1 == 0) ? 0 : integrale1(x1 - 1, y2);
-			C = integrale1(x2, y2);
-			D = (y1 == 0) ? 0 : integrale1(x2, y1 - 1);
-
-			nbPixel2 = (x2 - x1 + 1) * (y2 - y1 + 1);
-
-			moy = (C - D - B + A) / (double)(nbPixel2);
-
-			A = (x1 == 0 || y1 == 0) ? 0 : integrale2(x1 - 1, y1 - 1);
-			B = (x1 == 0) ? 0 : integrale2(x1 - 1, y2);
-			C = integrale2(x2, y2);
-			D = (y1 == 0) ? 0 : integrale2(x2, y1 - 1);
-
-			somme = (C - D - B + A);
-
-			ecartType = sqrt((somme / (double)(nbPixel2)) - (moy * moy));
-
-			out(i, j) = ecartType;
-		}
-	}
-
-	return out;
-}
-
-CImageNdg  CImageDouble::maxiLocauxOctant()
-{
-	CImageDouble NORME;
-	CImageDouble NORME2(this->lireHauteur() + 2, this->lireLargeur() + 2);
-	CImageDouble ANGLE;
-	CImageNdg COLOR(this->lireHauteur(), this->lireLargeur());
-
-	NORME = this->vecteurGradient("norme");
-	ANGLE = this->vecteurGradient("angle");
-
-	// gestion des bords et des coins
-	int pix;
-	NORME2(0, 0) = NORME(0, 0);
-	NORME2(0, NORME2.lireLargeur() - 1) = NORME(0, NORME.lireLargeur() - 1);
-	for (pix = 1; pix < NORME2.lireLargeur() - 1; pix++) {
-		NORME2(0, pix) = NORME(0, pix - 1);
-		NORME2(NORME2.lireHauteur() - 1, pix) = NORME(NORME.lireHauteur() - 1, pix - 1);
-	}
-	NORME2(NORME2.lireHauteur() - 1, 0) = NORME(NORME.lireHauteur() - 1, 0);
-	NORME2(NORME2.lireHauteur() - 1, NORME2.lireLargeur() - 1) = NORME(NORME.lireHauteur() - 1, NORME.lireLargeur() - 1);
-	for (pix = 1; pix < NORME2.lireHauteur() - 1; pix++) {
-		NORME2(pix, 0) = NORME(pix - 1, 0);
-		NORME2(pix, NORME2.lireLargeur() - 1) = NORME(pix - 1, NORME.lireLargeur() - 1);
-	}
-
-	// gestion du coeur
-	for (int i = 0; i < NORME.lireHauteur(); i++)
-		for (int j = 0; j < NORME.lireLargeur(); j++) {
-			NORME2(i + 1, j + 1) = NORME(i, j);
-		}
-
-	// gestion maxi locaux
-	for (int i = 0, ii = 1; i < this->lireHauteur(); i++, ii++)
-	{
-		for (int j = 0, jj = 1; j < this->lireLargeur(); j++, jj++)
-		{
-			double temp = ANGLE(i, j);
-			double norme = NORME2(ii, jj);
-
-			if ((ANGLE(i, j) >= -22.5 && ANGLE(i, j) < 22.5) || (ANGLE(i, j) >= 157.5 && ANGLE(i, j) <= 180) || (ANGLE(i, j) >= -180 && ANGLE(i, j) < -157.5))
-			{
-				if (NORME2(ii, jj) >= NORME2(ii + 1, jj) && NORME2(ii, jj) >= NORME2(ii - 1, jj) && NORME2(ii, jj) != 0)
-				{
-					COLOR(i, j) = 255;
-				}
-				else
-				{
-					COLOR(i, j) = 0;
-				}
-			}
-
-			if ((ANGLE(i, j) >= 22.5 && ANGLE(i, j) < 67.5) || (ANGLE(i, j) >= -157.5 && ANGLE(i, j) < -112.5))
-			{
-				if (NORME2(ii, jj) >= NORME2(ii + 1, jj + 1) && NORME2(ii, jj) >= NORME2(ii - 1, jj - 1) && NORME2(ii, jj) != 0)
-				{
-					COLOR(i, j) = 255;
-				}
-				else
-				{
-					COLOR(i, j) = 0;
-				}
-			}
-
-			if ((ANGLE(i, j) >= 67.5 && ANGLE(i, j) < 112.5) || (ANGLE(i, j) >= -112.5 && ANGLE(i, j) < -67.5))
-			{
-				if (NORME2(ii, jj) >= NORME2(ii, jj + 1) && NORME2(ii, jj) >= NORME2(ii, jj - 1) && NORME2(ii, jj) != 0)
-				{
-					COLOR(i, j) = 255;
-				}
-				else
-				{
-					COLOR(i, j) = 0;
-				}
-			}
-
-			if ((ANGLE(i, j) >= 112.5 && ANGLE(i, j) < 157.5) || (ANGLE(i, j) >= -67.5 && ANGLE(i, j) < -22.5))
-			{
-				if (NORME2(ii, jj) >= NORME2(ii - 1, jj + 1) && NORME2(ii, jj) >= NORME2(ii + 1, jj - 1) && NORME2(ii, jj) != 0)
-				{
-					COLOR(i, j) = 255;
-				}
-				else
-				{
-					COLOR(i, j) = 0;
-				}
-			}
-		}
-	}
-
-	COLOR.choixPalette("binaire");
-
-	return COLOR;
-}
-
-CImageNdg CImageDouble::harris(double k, int taille, double sigma)
-{
-	CImageDouble DOUBLE2(this->lireHauteur() + 2, this->lireLargeur() + 2);
-
-	CImageDouble Ix(this->lireHauteur(), this->lireLargeur());
-	CImageDouble Iy(this->lireHauteur(), this->lireLargeur());
-	CImageDouble Ix2(this->lireHauteur(), this->lireLargeur());
-	CImageDouble Iy2(this->lireHauteur(), this->lireLargeur());
-	CImageDouble Ixy(this->lireHauteur(), this->lireLargeur());
-
-	CImageDouble res(this->lireHauteur() + 2, this->lireLargeur() + 2);
-	CImageDouble out(this->lireHauteur(), this->lireLargeur());
-
-	CImageNdg harris(this->lireHauteur(), this->lireLargeur(), 0);
-
-	// gestion des bords et des coins
-	int pix;
-	DOUBLE2(0, 0) = this->operator()(0, 0);
-	DOUBLE2(0, DOUBLE2.lireLargeur() - 1) = this->operator()(0, this->lireLargeur() - 1);
-	for (pix = 1; pix < DOUBLE2.lireLargeur() - 1; pix++) {
-		DOUBLE2(0, pix) = this->operator()(0, pix - 1);
-		DOUBLE2(DOUBLE2.lireHauteur() - 1, pix) = this->operator()(this->lireHauteur() - 1, pix - 1);
-	}
-	DOUBLE2(DOUBLE2.lireHauteur() - 1, 0) = this->operator()(this->lireHauteur() - 1, 0);
-	DOUBLE2(DOUBLE2.lireHauteur() - 1, this->lireLargeur() - 1) = this->operator()(this->lireHauteur() - 1, this->lireLargeur() - 1);
-	for (pix = 1; pix < DOUBLE2.lireHauteur() - 1; pix++) {
-		DOUBLE2(pix, 0) = this->operator()(pix - 1, 0);
-		DOUBLE2(pix, DOUBLE2.lireLargeur() - 1) = this->operator()(pix - 1, this->lireLargeur() - 1);
-	}
-
-	// gestion du coeur
-	for (int i = 0; i < this->lireHauteur(); i++)
-		for (int j = 0; j < this->lireLargeur(); j++) {
-			DOUBLE2(i + 1, j + 1) = this->operator()(i, j);
-		}
-
-	for (int i = 0, ii = 1; i < this->lireHauteur(); i++, ii++)
-	{
-		for (int j = 0, jj = 1; j < this->lireLargeur(); j++, jj++)
-		{
-			Ix(i, j) = DOUBLE2(ii, jj) * 0 + DOUBLE2(ii - 1, jj) * -1 + DOUBLE2(ii + 1, jj) * 1;
-			Iy(i, j) = DOUBLE2(ii, jj) * 0 + DOUBLE2(ii, jj - 1) * -1 + DOUBLE2(ii, jj + 1) * 1;
-
-			Ixy(i, j) = Ix(i, j) * Iy(i, j);
-			Ix2(i, j) = Ix(i, j) * Ix(i, j);
-			Iy2(i, j) = Iy(i, j) * Iy(i, j);
-		}
-	}
-
-	Ixy = Ixy.filtrage("gaussien", taille, sigma);
-	Ix2 = Ix2.filtrage("gaussien", taille, sigma);
-	Iy2 = Iy2.filtrage("gaussien", taille, sigma);
-
-	double det, tr, max = DBL_MIN;
-	for (int i = 0; i < this->lireHauteur(); i++)
-	{
-		for (int j = 0; j < this->lireLargeur(); j++)
-		{
-			det = (Ix2(i, j) * Iy2(i, j)) - (Ixy(i, j) * Ixy(i, j));
-			tr = Ix2(i, j) + Iy2(i, j);
-
-			res(i + 1, j + 1) = det - k * (tr * tr);
-
-			if (res(i + 1, j + 1) > max)
-				max = res(i + 1, j + 1);
-		}
-	}
-
-	for (int i = 1; i < DOUBLE2.lireHauteur() - 1; i++)
-		for (int j = 1; j < DOUBLE2.lireLargeur() - 1; j++)
-			if ((res(i, j) > res(i - 1, j - 1)) && (res(i, j) > res(i - 1, j)) && (res(i, j) > res(i - 1, j + 1)) && (res(i, j) > res(i, j - 1)) && (res(i, j) > res(i, j + 1)) && (res(i, j) > res(i + 1, j - 1)) && (res(i, j) > res(i + 1, j)) && (res(i, j) > res(i + 1, j + 1)))
-				out(i - 1, j - 1) = res(i, j);
-
-	for (int i = 0; i < this->lireHauteur(); i++)
-	{
-		for (int j = 0; j < this->lireLargeur(); j++)
-		{
-			if (out(i, j) >= max * 0.1)
-			{
-				harris(i, j) = 1;
-			}
-		}
-	}
-
-	return harris;
-}
-#pragma endregion
